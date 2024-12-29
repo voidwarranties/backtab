@@ -1,10 +1,8 @@
-Backtab
-=======
+# Backtab
 
 This is the backend service for [tab-ui](https://github.com/0x20/tab-ui). The current recommended way to run this is Docker.
 
-Running on Docker
------------------
+## Running on Docker
 
 Build the docker image using
 
@@ -35,10 +33,69 @@ Finally, you can start the backend:
 
     docker start backtab
 
-Running natively (on Debian) (deprecated)
------------------------------------------
+## Running natively (on NixOS)
 
-*This method is deprecated and the documentation is kept for historical purposes*
+With the flake in this repository you can deploy Backtab on NixOS. Use an overlay to make the `backtab` package
+available to your configuration and import the `backtab` module exposed in `.#nixosModules`.
+For example:
+
+```nix
+{
+  description = "Nix flake for my infrastructure";
+
+  inputs = {
+    nixpkgs = {
+      url = "github:nixos/nixpkgs/nixos-24.11";
+    };
+
+    backtab = {
+      url = "github:voidwarranties/backtab";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+      };
+    };
+  };
+
+  outputs = { self, nixpkgs, backtab }@inputs: {
+    nixosConfigurations.myhostname = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        ({ pkgs, ... }: {
+          nixpkgs.overlays = [ inputs.backtab.overlays.default ];
+        })
+        inputs.backtab.nixosModules.backtab
+        ./configuration.nix
+      ];
+    };
+  };
+}
+```
+
+Now that you have the module available, configuration is straightforward. See example `configuration.nix`:
+
+```nix
+{ pkgs, lib, config, ... }:
+
+{
+  services.backtab = {
+    enable = true;
+
+    # Point the URL below to the repository where the tab ledger is kept
+    repositoryUrl = "git@github.com:example/tab-data.git";
+
+    # Keys listed below allow users with the accompanying private key to log in as the backtab user via ssh
+    # (provided openssh is enabled of course). This can be used to run `ssh-keygen` as the backtab user to generate a
+    # public/private keypair to add as a (write enabled) deploy key to the tab ledger repository.
+    authorizedKeys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILes7WTtBxDp1ILq+9iF1v2mmiQ0yFPprMREPUO240mu user@example.com"
+    ];
+  };
+}
+```
+
+## Running natively (on Debian) (deprecated)
+
+_This method is deprecated and the documentation is kept for historical purposes_
 
 Build a package using
 
@@ -52,8 +109,7 @@ The systemd init script will likely fail to start if you configured
 backtab to use a ssh:// url; if so, add your SSH private key to
 `/var/lib/backtab/.ssh` and then backtab should start.
 
-Running natively
-----------------
+## Running natively
 
 Check out a copy of your data repository wherever you find convenient.
 We'll call that location `/srv/backtab/tab-data`.
