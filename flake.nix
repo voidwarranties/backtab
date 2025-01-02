@@ -1,22 +1,16 @@
 {
-  description = "Flake for the bar tab backend server application (backtab)";
+  description = "Flake for the bar tab backend server application (Backtab)";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
-
-    devshell = {
-      url = "github:numtide/devshell";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs = {
     self,
-    devshell,
     nixpkgs,
   } @ inputs: let
     # This list of architectures provides the supported systems to the wrapper function below.
-    # It basically defines which architectures can build and run the backtab application.
+    # It basically defines which architectures can build and run the Backtab application.
     supportedSystems = [
       "aarch64-darwin"
       "x86_64-linux"
@@ -41,25 +35,22 @@
     #
     # we can define each output below (package, formatter, ...) once for all the architectures / systems.
     #
-    # It is a simplified version of [flake-utils](https://github.com/numtide/flake-utils). Check it out to learn more!
+    # See https://ayats.org/blog/no-flake-utils to learn more.
     #
     forAllSystems = function:
       nixpkgs.lib.genAttrs supportedSystems (system:
         function (import nixpkgs {
           inherit system;
-          overlays = [
-            devshell.overlays.default
-          ];
         }));
   in {
     formatter = forAllSystems (pkgs: pkgs.alejandra);
 
     packages = forAllSystems (pkgs: {
-      # There's only one package defined in this flake, so let's make that the default one:
-      default = pkgs.python3Packages.buildPythonApplication rec {
+      default = self.packages.${pkgs.system}.backtab;
+      backtab = pkgs.python3Packages.buildPythonApplication rec {
         pname = "backtab";
 
-        # backtab does not have versioned releases. To still keep track of some sort of version (a Nix package requires
+        # Backtab does not have versioned releases. To still keep track of some sort of version (a Nix package requires
         # it and it's also convenient for debugging) and not having to make up something arbitrary like "1.0", we'll
         # use the Nix builtin substring function to extract the first 7 characters of the git commit hash that the
         # build of this package is based on and use that as the version indicator.
@@ -90,13 +81,10 @@
       };
     });
 
-    devShells = forAllSystems (pkgs: {
-      default = pkgs.devshell.mkShell {
-        name = "backtab DevShell";
-        packages = with pkgs; [
-          vscodium
-        ];
-      };
-    });
+    nixosModules.backtab = import ./nixos-module.nix;
+
+    overlays.default = final: prev: {
+      inherit (self.packages.${prev.system}) backtab;
+    };
   };
 }
