@@ -10,6 +10,7 @@
     http:
       listen: '${cfg.httpListenAddress}'
       port: ${builtins.toString cfg.httpListenPort}
+    event_mode: false
     datadir: /var/lib/backtab
     slowdown: ${builtins.toString cfg.slowdown}
   '';
