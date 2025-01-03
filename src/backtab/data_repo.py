@@ -422,7 +422,7 @@ class RepoData:
 
         products = {}
         with open(os.path.join(self.repo_path, "static", "products.yml"), "rt") as f:
-            raw_products = yaml.load(f)
+            raw_products = yaml.load(f, Loader=yaml.SafeLoader)
         if type(raw_products) != list:
             raise TypeError("Products should be a list")
         for raw_product in raw_products:
