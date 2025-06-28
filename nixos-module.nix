@@ -10,7 +10,7 @@
     http:
       listen: '${cfg.httpListenAddress}'
       port: ${builtins.toString cfg.httpListenPort}
-    event_mode: false
+    event_mode: ${cfg.eventMode}
     datadir: /var/lib/backtab
     slowdown: ${builtins.toString cfg.slowdown}
   '';
@@ -31,6 +31,12 @@ in {
         type = types.int;
         default = 4903;
         description = "Port on which the Backtab service should listen.";
+      };
+
+      eventMode = mkOption {
+        type = types.bool;
+        default = false;
+        description = "Enable event prices.";
       };
 
       slowdown = mkOption {
