@@ -2,7 +2,7 @@
   description = "Flake for the bar tab backend server application (Backtab)";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
   };
 
   outputs = {
@@ -69,7 +69,7 @@
         propagatedBuildInputs = [
           (pkgs.python3.withPackages (ps:
             with ps; [
-              beancount
+              beancount_2
               bottle
               click
               pyyaml

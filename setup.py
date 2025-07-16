@@ -19,6 +19,6 @@ setuptools.setup(
         "bottle >= 0.12, <0.13",
         "PyYAML",
         "sdnotify >= 0.3.1, <0.4",
-        "beancount == 2.3.5",
+        "beancount == 2.3.6",
     ],
 )
