@@ -46,9 +46,13 @@
     formatter = forAllSystems (pkgs: pkgs.alejandra);
 
     packages = forAllSystems (pkgs: {
-      default = self.packages.${pkgs.system}.backtab;
+      default = self.packages.${pkgs.stdenv.hostPlatform.system}.backtab;
       backtab = pkgs.python3Packages.buildPythonApplication rec {
         pname = "backtab";
+        pyproject = true;
+        build-system = [pkgs.python3Packages.setuptools];
+        # setup.py pins older versions than nixpkgs ships, relax them
+        pythonRelaxDeps = true;
 
         # Backtab does not have versioned releases. To still keep track of some sort of version (a Nix package requires
         # it and it's also convenient for debugging) and not having to make up something arbitrary like "1.0", we'll
@@ -84,7 +88,7 @@
     nixosModules.backtab = import ./nixos-module.nix;
 
     overlays.default = final: prev: {
-      inherit (self.packages.${prev.system}) backtab;
+      inherit (self.packages.${prev.stdenv.hostPlatform.system}) backtab;
     };
   };
 }
